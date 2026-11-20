@@ -1,0 +1,1 @@
+notes_automation	true	5 folders visible

@@ -1,0 +1,10 @@
+{
+  "name": "apple-notes",
+  "version": "0.0.0",
+  "description": "Apple Notes CLI for AI agents: list, search and read notes; policy-gated create/append/move via Notes.app.",
+  "author": { "name": "Bam679", "url": "https://github.com/Bam679" },
+  "homepage": "https://github.com/Bam679/apple-notes-cli",
+  "repository": "https://github.com/Bam679/apple-notes-cli",
+  "license": "MIT",
+  "keywords": ["apple-notes", "notes", "macos", "jxa", "cli", "agent"]
+}

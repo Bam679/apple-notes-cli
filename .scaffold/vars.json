@@ -1,0 +1,19 @@
+{
+  "REPO": "apple-notes-cli",
+  "BIN": "apple-notes",
+  "TITLE": "Apple Notes",
+  "DESC": "Apple Notes CLI for AI agents: list, search and read notes; policy-gated create/append/move via Notes.app.",
+  "PKG": "notes",
+  "APPLE": true,
+  "GOOS": "darwin",
+  "PLATFORMS": "macOS 14+, Apple Silicon and Intel",
+  "EXAMPLE_OS": "darwin",
+  "KEYWORDS": "\"apple-notes\", \"notes\", \"macos\", \"jxa\", \"cli\", \"agent\"",
+  "SCOPE_HELP": "folder paths `Account/Folder/Sub` (e.g. `iCloud/Agent*`)",
+  "WRITE_OPS": "`add`, `append`, `update`, `move`, `delete`, `folder-create`, `folder-delete`",
+  "SYSTEM_POLICY": "/Library/Application Support/agent-cli/apple-notes.json",
+  "INJECTION": "Static JXA script (`go:embed`). Input travels only as one JSON argv element to `/usr/bin/osascript` (absolute path), and note text is HTML-escaped in Go before it becomes note HTML. Fuzz tests check the script and argv shape are invariant, and an integration test round-trips hostile strings through real Notes.",
+  "SECRETS": "No credentials involved; macOS Automation permission controls access. Password-protected notes are never read.",
+  "NETWORK": "",
+  "POLICY": "{\n  \"version\": 1,\n  \"operations\": { \"allow\": [\"read\", \"add\", \"append\"], \"deny\": [\"delete\", \"folder-delete\"] },\n  \"scopes\": {\n    \"read\":  { \"allow\": [\"*\"], \"deny\": [\"iCloud/Private*\"] },\n    \"write\": { \"allow\": [\"iCloud/Agent*\"], \"deny\": [] }\n  },\n  \"limits\": { \"max_results\": 200, \"max_write_batch\": 10 }\n}"
+}

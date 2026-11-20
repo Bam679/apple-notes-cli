@@ -1,0 +1,13 @@
+{
+  "name": "apple-notes-cli",
+  "owner": { "name": "Bam679" },
+  "description": "Single-plugin marketplace for apple-notes. All agent CLIs: Bam679/agent-cli-plugins.",
+  "plugins": [
+    {
+      "name": "apple-notes",
+      "source": "./plugin",
+      "description": "Apple Notes CLI for AI agents: list, search and read notes; policy-gated create/append/move via Notes.app.",
+      "category": "productivity"
+    }
+  ]
+}

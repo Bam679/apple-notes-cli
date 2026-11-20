@@ -1,0 +1,9 @@
+id: N2
+title: Agent scratch
+folder: iCloud/Agent
+modified: 2026-11-12T10:00:00Z
+locked: false
+attachments: 0
+text: todo: wifi setup
+created: -
+folder_id: F2
