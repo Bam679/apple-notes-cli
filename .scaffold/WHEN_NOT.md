@@ -1,3 +1,3 @@
-- You need rich formatting, tables, checklists or attachments in new notes. The CLI writes plain paragraphs.
+- You need checklists, highlights, block quotes or clickable link text in new notes. The Notes scripting interface drops them (tested on macOS 26.6.2). Headings, text styles, colours, font sizes, lists, tables, code blocks and attachments work through `--markdown` and `--attach`.
 - You want to search thousands of long notes often. `search --body` reads every note's text through Apple Events and takes seconds per run.
 - Your agent cannot run shell commands. An MCP server fits better there.

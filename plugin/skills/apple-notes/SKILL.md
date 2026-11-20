@@ -35,7 +35,8 @@ apple-notes append <id> --body "Update: …" --confirm
 apple-notes move <id> --to iCloud/Archive --confirm
 printf '%s\n' '{"folder":"iCloud/Agent","title":"Idea","body":"…"}' | apple-notes add - --confirm
 ```
-- Bodies are plain text. The CLI escapes them and stores each line as a paragraph.
+- Bodies are plain text by default. With `--markdown` the CLI formats them: `#`/`##`/`###` headings, **bold**, *italic*, ~~strike~~, `code`, lists, pipe tables, code blocks, plus `<u>`, `<font color="#hex">` and `<span style="font-size: 28px">`. Checklists, highlights and clickable links are not possible.
+- `--attach /path/file.png` (repeatable) adds images or files.
 - `update` replaces the whole body. Prefer `append` when adding information.
 - `delete` moves notes to *Recently Deleted*.
 

@@ -2,6 +2,8 @@ package notes
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -52,18 +54,19 @@ func NewApp(b Bridge, version string) *agentcli.App {
 				Flags: []agentcli.Flag{
 					{Name: "folder", Type: agentcli.String, Usage: "target folder path, name or id"},
 					{Name: "title", Type: agentcli.String, Usage: "title (first line)"},
-					{Name: "body", Type: agentcli.String, Usage: "plain-text body"}},
-				Stdin:  `{"folder":"iCloud/Agent","title":"…","body":"…"} (one per line)`,
+					{Name: "body", Type: agentcli.String, Usage: "body: plain text, or Markdown with --markdown"},
+					markdownFlag, attachFlag},
+				Stdin:  `{"folder":"iCloud/Agent","title":"…","body":"…","markdown":true,"attach":["/abs/path.png"]} (one per line)`,
 				Fields: noteCols, AllFields: noteFields, Plan: h.add,
 				Example: "apple-notes add --folder iCloud/Agent --title 'Meeting' --body 'Notes…' --dry-run"},
 			{Name: "append", Summary: "append plain text to a note", Kind: agentcli.Write, Op: "append",
 				Args:   []agentcli.Arg{{Name: "id", Usage: "note id", Required: true}},
-				Flags:  []agentcli.Flag{{Name: "body", Type: agentcli.String, Usage: "text to append", Required: true}},
+				Flags:  []agentcli.Flag{{Name: "body", Type: agentcli.String, Usage: "text to append", Required: true}, markdownFlag, attachFlag},
 				Fields: noteCols, AllFields: noteFields, Plan: h.appendNote},
 			{Name: "update", Summary: "replace a note's content (title kept unless --title)", Kind: agentcli.Write, Op: "update",
 				Args: []agentcli.Arg{{Name: "id", Usage: "note id", Required: true}},
 				Flags: []agentcli.Flag{{Name: "title", Type: agentcli.String, Usage: "new title"},
-					{Name: "body", Type: agentcli.String, Usage: "new plain-text body", Required: true}},
+					{Name: "body", Type: agentcli.String, Usage: "new body: plain text, or Markdown with --markdown", Required: true}, markdownFlag},
 				Fields: noteCols, AllFields: noteFields, Plan: h.update},
 			{Name: "move", Summary: "move notes to another folder", Kind: agentcli.Write, Op: "move",
 				Args:   []agentcli.Arg{{Name: "id", Usage: "note id(s)", Required: true, Variadic: true}},
@@ -83,6 +86,42 @@ func NewApp(b Bridge, version string) *agentcli.App {
 }
 
 type handlers struct{ b Bridge }
+
+var (
+	markdownFlag = agentcli.Flag{Name: "markdown", Type: agentcli.Bool,
+		Usage: "body is Markdown: headings, **bold**, *italic*, ~~strike~~, `code`, lists, tables, code blocks, and <u>, <font color>, <span style=\"color|font-size\">"}
+	attachFlag = agentcli.Flag{Name: "attach", Type: agentcli.Strings, Usage: "file to attach, e.g. an image (repeatable, max 50 MiB each)"}
+)
+
+// maxAttachment caps the size of a file attached to a note.
+const maxAttachment = 50 << 20
+
+// attachments validates --attach paths and returns them as absolute paths.
+func attachments(paths []string) ([]string, error) {
+	var out []string
+	for _, p := range paths {
+		abs, err := filepath.Abs(p)
+		if err != nil {
+			return nil, agentcli.Usagef("invalid path %q", p)
+		}
+		fi, err := os.Stat(abs)
+		if err != nil || !fi.Mode().IsRegular() {
+			return nil, agentcli.Usagef("%s is not a readable regular file", p)
+		}
+		if fi.Size() > maxAttachment {
+			return nil, agentcli.Usagef("%s is larger than 50 MiB", p)
+		}
+		out = append(out, abs)
+	}
+	return out, nil
+}
+
+func bodyHTML(title, body string, markdown bool) string {
+	if markdown {
+		return MarkdownHTML(title, body)
+	}
+	return NoteHTML(title, body)
+}
 
 func folderItem(f Folder) agentcli.Item {
 	return agentcli.Item{"id": f.ID, "path": f.Path, "name": f.Name, "account": f.Account, "parent_id": f.ParentID, "notes": f.Notes}
@@ -270,9 +309,11 @@ func (h *handlers) doctor(c *agentcli.Ctx) error {
 }
 
 type addInput struct {
-	Folder string `json:"folder"`
-	Title  string `json:"title"`
-	Body   string `json:"body"`
+	Folder   string   `json:"folder"`
+	Title    string   `json:"title"`
+	Body     string   `json:"body"`
+	Markdown bool     `json:"markdown"`
+	Attach   []string `json:"attach"`
 }
 
 func (h *handlers) add(c *agentcli.Ctx) (*agentcli.WritePlan, error) {
@@ -286,7 +327,8 @@ func (h *handlers) add(c *agentcli.Ctx) (*agentcli.WritePlan, error) {
 			return nil, err
 		}
 	} else {
-		ins = []addInput{{Folder: c.String("folder"), Title: c.String("title"), Body: c.String("body")}}
+		ins = []addInput{{Folder: c.String("folder"), Title: c.String("title"), Body: c.String("body"),
+			Markdown: c.Bool("markdown"), Attach: c.Strings("attach")}}
 	}
 	fs, err := h.b.Folders(c)
 	if err != nil {
@@ -295,6 +337,7 @@ func (h *handlers) add(c *agentcli.Ctx) (*agentcli.WritePlan, error) {
 	type job struct {
 		folder Folder
 		html   string
+		files  []string
 	}
 	var jobs []job
 	var scopes []string
@@ -307,9 +350,13 @@ func (h *handlers) add(c *agentcli.Ctx) (*agentcli.WritePlan, error) {
 		if err != nil {
 			return nil, err
 		}
-		jobs = append(jobs, job{f, NoteHTML(in.Title, in.Body)})
+		files, err := attachments(in.Attach)
+		if err != nil {
+			return nil, err
+		}
+		jobs = append(jobs, job{f, bodyHTML(in.Title, in.Body, in.Markdown), files})
 		scopes = append(scopes, f.Path)
-		targets = append(targets, agentcli.Item{"title": in.Title, "folder": f.Path})
+		targets = append(targets, agentcli.Item{"title": in.Title, "folder": f.Path, "attachments": len(files)})
 	}
 	return &agentcli.WritePlan{Scopes: scopes, Targets: targets, Apply: func(ctx context.Context) ([]agentcli.Item, error) {
 		var out []agentcli.Item
@@ -317,6 +364,11 @@ func (h *handlers) add(c *agentcli.Ctx) (*agentcli.WritePlan, error) {
 			n, err := h.b.Add(ctx, j.folder.ID, j.html)
 			if err != nil {
 				return nil, partial(err, len(out), len(jobs))
+			}
+			for _, f := range j.files {
+				if n, err = h.b.Attach(ctx, n.ID, f); err != nil {
+					return nil, partial(err, len(out), len(jobs))
+				}
 			}
 			n.Text, n.HTML = "", ""
 			out = append(out, noteItem(n))
@@ -346,13 +398,18 @@ func (h *handlers) unlocked(c *agentcli.Ctx, id string) (Note, error) {
 	return n, nil
 }
 
-func (h *handlers) setBody(n Note, html string, appendBody bool) *agentcli.WritePlan {
+func (h *handlers) setBody(n Note, html string, appendBody bool, files []string) *agentcli.WritePlan {
 	target := noteItem(Note{ID: n.ID, Title: n.Title, Folder: n.Folder, FolderID: n.FolderID, Modified: n.Modified})
 	return &agentcli.WritePlan{Scopes: []string{n.Folder}, Targets: []agentcli.Item{target},
 		Apply: func(ctx context.Context) ([]agentcli.Item, error) {
 			u, err := h.b.SetBody(ctx, n.ID, html, appendBody)
 			if err != nil {
 				return nil, err
+			}
+			for _, f := range files {
+				if u, err = h.b.Attach(ctx, n.ID, f); err != nil {
+					return nil, err
+				}
 			}
 			u.Text, u.HTML = "", ""
 			return []agentcli.Item{noteItem(u)}, nil
@@ -367,7 +424,11 @@ func (h *handlers) appendNote(c *agentcli.Ctx) (*agentcli.WritePlan, error) {
 	if c.String("body") == "" {
 		return nil, agentcli.Usagef("--body must not be empty")
 	}
-	return h.setBody(n, BodyHTML(c.String("body")), true), nil
+	files, err := attachments(c.Strings("attach"))
+	if err != nil {
+		return nil, err
+	}
+	return h.setBody(n, bodyHTML("", c.String("body"), c.Bool("markdown")), true, files), nil
 }
 
 func (h *handlers) update(c *agentcli.Ctx) (*agentcli.WritePlan, error) {
@@ -381,7 +442,7 @@ func (h *handlers) update(c *agentcli.Ctx) (*agentcli.WritePlan, error) {
 			return nil, agentcli.Usagef("title must not be empty")
 		}
 	}
-	p := h.setBody(n, NoteHTML(title, c.String("body")), false)
+	p := h.setBody(n, bodyHTML(title, c.String("body"), c.Bool("markdown")), false, nil)
 	p.Targets[0]["title"] = title
 	return p, nil
 }

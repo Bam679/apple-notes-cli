@@ -149,6 +149,13 @@ func (f *fakeBridge) Move(_ context.Context, id, folderID string) (Note, error) 
 	return f.notes[i], nil
 }
 
+func (f *fakeBridge) Attach(_ context.Context, id, path string) (Note, error) {
+	i := f.idx(id)
+	f.notes[i].Attachments++
+	f.notes[i].HTML += "<attachment " + filepath.Base(path) + ">"
+	return f.notes[i], nil
+}
+
 func (f *fakeBridge) Delete(_ context.Context, id string, _ bool) error {
 	if f.fail != nil {
 		return f.fail

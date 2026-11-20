@@ -4,10 +4,15 @@ package notes
 
 import (
 	"bytes"
+	"compress/zlib"
 	"context"
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"hash/crc32"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -113,4 +118,76 @@ func TestIntegrationSandboxFolder(t *testing.T) {
 func mustJSON(s string) string {
 	b, _ := json.Marshal(s)
 	return string(b)
+}
+
+// TestIntegrationMarkdownShowcase writes one formatted note into the review
+// folder iCloud/agent-cli-test-format and leaves it there for a visual check
+// in the Notes UI. It only runs with AGENT_CLI_NOTES_SHOWCASE=1.
+func TestIntegrationMarkdownShowcase(t *testing.T) {
+	if os.Getenv("AGENT_CLI_NOTES_SHOWCASE") != "1" {
+		t.Skip("set AGENT_CLI_NOTES_SHOWCASE=1 to write the showcase note")
+	}
+	ctx := context.Background()
+	b := NewJXA()
+	fs, err := b.Folders(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var folder Folder
+	for _, f := range fs {
+		if f.Path == "iCloud/agent-cli-test-format" {
+			folder = f
+		}
+	}
+	if folder.ID == "" {
+		t.Skip("review folder iCloud/agent-cli-test-format does not exist")
+	}
+	md := "# Heading\n## Subheading\n### Small heading\n" +
+		"Plain text with **bold**, *italic*, <u>underline</u>, ~~strike~~ and `inline code`.\n" +
+		"<font color=\"#E03131\">Red</font>, <font color=\"#1C7ED6\">blue</font> and <span style=\"font-size: 28px\">large</span> text.\n\n" +
+		"- Bullet\n- Bullet with **bold**\n  - Nested bullet\n1. First\n2. Second\n\n" +
+		"| Item | Qty | Note |\n|---|---|---|\n| Apples | 3 | **fresh** |\n| Pears | 5 | <font color=\"#2F9E44\">ripe</font> |\n\n" +
+		"```\nfunc main() {\n    fmt.Println(\"hi\")\n}\n```\n> A quote (rendered in italics)\n"
+	n, err := b.Add(ctx, folder.ID, MarkdownHTML("16 Markdown showcase", md))
+	if err != nil {
+		t.Fatal(err)
+	}
+	img := filepath.Join(t.TempDir(), "swatch.png")
+	if err := os.WriteFile(img, swatchPNG(), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := b.Attach(ctx, n.ID, img); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := b.Get(ctx, n.ID)
+	t.Logf("showcase note %s, %d attachment(s)", n.ID, got.Attachments)
+}
+
+// swatchPNG returns a 120x60 solid PNG.
+func swatchPNG() []byte {
+	var raw bytes.Buffer
+	for y := 0; y < 60; y++ {
+		raw.WriteByte(0)
+		for x := 0; x < 120; x++ {
+			raw.Write([]byte{28, 126, 214})
+		}
+	}
+	var z bytes.Buffer
+	w := zlib.NewWriter(&z)
+	_, _ = w.Write(raw.Bytes())
+	_ = w.Close()
+	chunk := func(kind string, data []byte) []byte {
+		var c bytes.Buffer
+		_ = binary.Write(&c, binary.BigEndian, uint32(len(data)))
+		c.WriteString(kind)
+		c.Write(data)
+		_ = binary.Write(&c, binary.BigEndian, crc32.ChecksumIEEE(append([]byte(kind), data...)))
+		return c.Bytes()
+	}
+	var hdr bytes.Buffer
+	_ = binary.Write(&hdr, binary.BigEndian, []any{uint32(120), uint32(60), uint8(8), uint8(2), uint8(0), uint8(0), uint8(0)})
+	out := []byte("\x89PNG\r\n\x1a\n")
+	out = append(out, chunk("IHDR", hdr.Bytes())...)
+	out = append(out, chunk("IDAT", z.Bytes())...)
+	return append(out, chunk("IEND", nil)...)
 }

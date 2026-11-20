@@ -116,6 +116,12 @@ const OPS = {
     n.body = a.append ? n.body() + a.html : a.html;
     return noteOut(n, folderIndex(), true);
   },
+  attach: function (a) {
+    const n = noteSpec(a.id);
+    if (n.passwordProtected()) fail('conflict', 'note is locked');
+    N.make({ new: 'attachment', at: n, withData: Path(a.path) });
+    return noteOut(noteSpec(a.id), folderIndex(), false);
+  },
   move: function (a) {
     const n = noteSpec(a.id);
     N.move(n, { to: folderSpec(a.folder_id) });

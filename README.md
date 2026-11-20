@@ -7,6 +7,11 @@ Read, search and write Apple Notes from the command line, built for AI coding ag
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Bam679/apple-notes-cli/badge)](https://scorecard.dev/viewer/?uri=github.com/Bam679/apple-notes-cli)
 [![licence](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+  <img alt="apple-notes logo: the agent-cli bracket mark with the apple-notes glyph" src="assets/logo.svg" height="56">
+</picture>
+
 `apple-notes` controls the Notes app through fixed JXA scripts and prints one line per note, or a note's plain text. Everything runs on your Mac, and the CLI itself makes no network connections. Writes stay off until a policy file allows them, and password-protected notes are never read.
 
 Measured on the 20 most recently changed notes (2026-11-20, v0.1.0, macOS 26.6.2): the default text output was 3,211 bytes and `--json` 7,052 bytes. The command took 3.6 s, because Notes reads every folder for a newest-first list. Bytes are not tokens; `apple-notes list --limit 20 | wc -c` shows your own number.
@@ -106,7 +111,7 @@ The [CLI reference](docs/reference/cli.md) has every command, flag, field and th
 
 ## When not to use it
 
-- You need rich formatting, tables, checklists or attachments in new notes. The CLI writes plain paragraphs.
+- You need checklists, highlights, block quotes or clickable link text in new notes. The Notes scripting interface drops them (tested on macOS 26.6.2). Headings, text styles, colours, font sizes, lists, tables, code blocks and attachments work through `--markdown` and `--attach`.
 - You want to search thousands of long notes often. `search --body` reads every note's text through Apple Events and takes seconds per run.
 - Your agent cannot run shell commands. An MCP server fits better there.
 
@@ -195,15 +200,15 @@ An agent with unrestricted shell access can go around any CLI, for example by ca
 | `search <text> [--folder F]… [--body]` | read | title match, or with `--body` also plain-text content |
 | `get <id> [--html]` | read | one note as plain text (locked notes: metadata only) |
 | `doctor` | read | permission check |
-| `add --folder F --title T [--body B]` / `add -` | write `add` | create notes (stdin: JSON/NDJSON) |
-| `append <id> --body B` | write `append` | append paragraphs |
+| `add --folder F --title T [--body B] [--markdown] [--attach FILE]…` / `add -` | write `add` | create notes, plain or formatted from Markdown, with attachments (stdin: JSON/NDJSON) |
+| `append <id> --body B [--markdown] [--attach FILE]…` | write `append` | append paragraphs or formatted Markdown, and attachments |
 | `update <id> --body B [--title T]` | write `update` | replace content |
 | `move <id>… --to F` | write `move` | needs write scope on source and target |
 | `delete <id>…` | write `delete` | moves to *Recently Deleted* |
 | `folder-create <Account/Path>` / `folder-delete <folder>` | write | create / delete an empty folder |
 | `schema`, `policy`, `guard`, `version` | builtin | contract, effective policy, hook guard, version |
 
-Folders can be given as full path, id, or unique name. Bodies are plain text: they are HTML-escaped and stored as Notes paragraphs.
+Folders can be given as full path, id, or unique name. Without `--markdown`, bodies are plain text, HTML-escaped and stored as paragraphs.
 
 ## Documentation
 

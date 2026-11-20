@@ -20,15 +20,15 @@ Flags can appear before or after arguments. Every flag has two dashes. `--` ends
 | `search <text> [--folder F]… [--body]` | read | title match, or with `--body` also plain-text content |
 | `get <id> [--html]` | read | one note as plain text (locked notes: metadata only) |
 | `doctor` | read | permission check |
-| `add --folder F --title T [--body B]` / `add -` | write `add` | create notes (stdin: JSON/NDJSON) |
-| `append <id> --body B` | write `append` | append paragraphs |
+| `add --folder F --title T [--body B] [--markdown] [--attach FILE]…` / `add -` | write `add` | create notes, plain or formatted from Markdown, with attachments (stdin: JSON/NDJSON) |
+| `append <id> --body B [--markdown] [--attach FILE]…` | write `append` | append paragraphs or formatted Markdown, and attachments |
 | `update <id> --body B [--title T]` | write `update` | replace content |
 | `move <id>… --to F` | write `move` | needs write scope on source and target |
 | `delete <id>…` | write `delete` | moves to *Recently Deleted* |
 | `folder-create <Account/Path>` / `folder-delete <folder>` | write | create / delete an empty folder |
 | `schema`, `policy`, `guard`, `version` | builtin | contract, effective policy, hook guard, version |
 
-Folders can be given as full path, id, or unique name. Bodies are plain text: they are HTML-escaped and stored as Notes paragraphs.
+Folders can be given as full path, id, or unique name. Without `--markdown`, bodies are plain text, HTML-escaped and stored as paragraphs.
 
 ## Global flags
 
@@ -105,6 +105,24 @@ The default text columns are `id modified title folder` for notes and `id path n
 ## Scopes
 
 Policy scopes match folder paths such as `iCloud/Work/Projects`. `move` needs write scope on both the source and the target folder.
+
+## Formatting with --markdown
+
+| Markdown | Result in Notes |
+|---|---|
+| `# `, `## `, `### ` | bold heading at 24 px, 18 px and body size |
+| `**bold**`, `*italic*`, `~~strike~~` | bold, italic, strikethrough |
+| `` `code` `` and fenced code blocks | Courier |
+| `- item`, `1. item`, two-space indentation | bullet, numbered and nested lists |
+| pipe tables with a `---` row | a Notes table; the first row is bold |
+| `> quote` | italic paragraph (Notes has no quote style for scripts) |
+| `<u>`, `<b>`, `<i>`, `<s>` | underline, bold, italic, strikethrough |
+| `<font color="#E03131">`, `<font face="Georgia">` | text colour, font |
+| `<span style="color: …; font-size: 28px; font-family: …">` | colour, size, font |
+
+All other HTML is escaped and shows as text. Notes drops checklists, highlights, block quotes, alignment, indentation and link targets when a script writes a note, so the CLI cannot create them.
+
+`--attach FILE` adds a regular file of up to 50 MiB, such as an image or PDF, as an attachment. Tables also count as attachments in the `attachments` field.
 
 ## Behaviour notes
 

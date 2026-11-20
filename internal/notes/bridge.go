@@ -52,6 +52,8 @@ type Bridge interface {
 	Add(ctx context.Context, folderID, html string) (Note, error)
 	SetBody(ctx context.Context, id, html string, appendBody bool) (Note, error)
 	Move(ctx context.Context, id, folderID string) (Note, error)
+	// Attach adds the file at path (absolute, validated by the caller) to a note.
+	Attach(ctx context.Context, id, path string) (Note, error)
 	// Delete moves a note to "Recently Deleted"; purge (test cleanup only)
 	// deletes it from there as well.
 	Delete(ctx context.Context, id string, purge bool) error
@@ -176,6 +178,11 @@ func (j *JXA) SetBody(ctx context.Context, id, html string, appendBody bool) (No
 // Move implements Bridge.
 func (j *JXA) Move(ctx context.Context, id, folderID string) (Note, error) {
 	return j.one(ctx, "move", map[string]string{"id": id, "folder_id": folderID})
+}
+
+// Attach implements Bridge.
+func (j *JXA) Attach(ctx context.Context, id, path string) (Note, error) {
+	return j.one(ctx, "attach", map[string]string{"id": id, "path": path})
 }
 
 // Delete implements Bridge.

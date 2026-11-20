@@ -13,7 +13,7 @@ func TestScriptIsStatic(t *testing.T) {
 	if !strings.Contains(script, "const OPS") || strings.Contains(script, "%s") {
 		t.Fatal("script must be a static OPS table")
 	}
-	for _, op := range []string{"accounts", "folders", "notes", "get", "add", "set_body", "move", "delete", "folder_create", "folder_delete"} {
+	for _, op := range []string{"accounts", "folders", "notes", "get", "add", "set_body", "move", "delete", "folder_create", "folder_delete", "attach"} {
 		if !strings.Contains(script, "  "+op+": function") {
 			t.Errorf("missing op %s", op)
 		}
@@ -61,6 +61,7 @@ func TestJXAWireMapping(t *testing.T) {
 		func() error { _, err := j.SetBody(ctx, "N", "<div>y</div>", true); return err },
 		func() error { _, err := j.Move(ctx, "N", "F"); return err },
 		func() error { return j.Delete(ctx, "N", false) },
+		func() error { _, err := j.Attach(ctx, "N", "/tmp/x.png"); return err },
 		func() error { _, err := j.CreateFolder(ctx, "A", "", "B"); return err },
 		func() error { return j.DeleteFolder(ctx, "F", false) },
 	} {
