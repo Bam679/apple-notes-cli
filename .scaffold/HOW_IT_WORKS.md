@@ -1,0 +1,1 @@
+`apple-notes` runs one fixed JXA script through `/usr/bin/osascript`, which controls Notes with Apple Events. Your input reaches the script as a single JSON argument, and note text is HTML-escaped in Go before it becomes note content, so text from you or the agent never becomes code.

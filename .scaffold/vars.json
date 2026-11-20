@@ -21,5 +21,11 @@
   "PERMISSION_HINT": "macOS has not allowed the app that runs the CLI to control Notes",
   "DATA_NOUN": "your notes",
   "INTEGRATION_NOTE": "The Notes tests create a folder named `agent-cli-test-<random>`, delete its notes (also from Recently Deleted) and remove the folder.",
-  "ARCHIVE_NOTE": ""
+  "ARCHIVE_NOTE": "",
+  "TARGET": "Notes",
+  "AGENT_TASK": "the user's Apple Notes",
+  "SANDBOX_TARGET": "Notes through `osascript`",
+  "FIRST_RUN": "On the first run macOS asks whether your terminal app may control Notes.",
+  "ARCHIVE_CHOICES": "`darwin` with `arm64` or `amd64`",
+  "NETWORK_SECTION": "`apple-notes` makes no network connections. Notes stay in the Notes app, and iCloud syncs them as usual."
 }

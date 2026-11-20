@@ -1,0 +1,1 @@
+`apple-notes` controls the Notes app through fixed JXA scripts and prints one line per note, or a note's plain text. Everything runs on your Mac, and the CLI itself makes no network connections. Writes stay off until a policy file allows them, and password-protected notes are never read.

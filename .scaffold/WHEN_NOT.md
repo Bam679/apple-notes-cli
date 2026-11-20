@@ -1,0 +1,3 @@
+- You need rich formatting, tables, checklists or attachments in new notes. The CLI writes plain paragraphs.
+- You want to search thousands of long notes often. `search --body` reads every note's text through Apple Events and takes seconds per run.
+- Your agent cannot run shell commands. An MCP server fits better there.

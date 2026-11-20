@@ -1,6 +1,0 @@
-- Folders with full paths, notes sorted by last change, and search in titles or full text
-- Plain-text note bodies with a size limit, so long notes don't flood the agent's context
-- Creating notes, appending to them, replacing their content and moving them, with text safely escaped
-- Writes stay off until a policy file allows them, per operation and per folder
-- Password-protected notes are never read or changed
-- A Claude Code plugin with a skill for agents and a hook that protects the policy file

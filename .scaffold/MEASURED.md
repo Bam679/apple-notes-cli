@@ -1,0 +1,1 @@
+Measured on the 20 most recently changed notes (2026-11-20, v0.1.0, macOS 26.6.2): the default text output was 3,211 bytes and `--json` 7,052 bytes. The command took 3.6 s, because Notes reads every folder for a newest-first list. Bytes are not tokens; `apple-notes list --limit 20 | wc -c` shows your own number.

@@ -1,1 +1,0 @@
-`apple-notes` lets an AI agent look things up in your notes and write meeting notes or summaries back. It controls Notes.app through static JXA scripts, prints one compact line per note, and stays read-only until you allow writes in a policy file. The checks run inside the binary, so they apply to every agent, whether that is Claude Code, Codex, Cursor or a script.
