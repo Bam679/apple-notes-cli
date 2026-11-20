@@ -11,10 +11,15 @@
   "KEYWORDS": "\"apple-notes\", \"notes\", \"macos\", \"jxa\", \"cli\", \"agent\"",
   "SCOPE_HELP": "folder paths `Account/Folder/Sub` (e.g. `iCloud/Agent*`)",
   "WRITE_OPS": "`add`, `append`, `update`, `move`, `delete`, `folder-create`, `folder-delete`",
-  "SYSTEM_POLICY": "/Library/Application Support/agent-cli/apple-notes.json",
   "INJECTION": "Static JXA script (`go:embed`). Input travels only as one JSON argv element to `/usr/bin/osascript` (absolute path), and note text is HTML-escaped in Go before it becomes note HTML. Fuzz tests check the script and argv shape are invariant, and an integration test round-trips hostile strings through real Notes.",
   "SECRETS": "No credentials involved; macOS Automation permission controls access. Password-protected notes are never read.",
   "NETWORK": "",
-  "POLICY": "{\n  \"version\": 1,\n  \"operations\": { \"allow\": [\"read\", \"add\", \"append\"], \"deny\": [\"delete\", \"folder-delete\"] },\n  \"scopes\": {\n    \"read\":  { \"allow\": [\"*\"], \"deny\": [\"iCloud/Private*\"] },\n    \"write\": { \"allow\": [\"iCloud/Agent*\"], \"deny\": [] }\n  },\n  \"limits\": { \"max_results\": 200, \"max_write_batch\": 10 }\n}",
-  "ICON_COLOR": "#F08C00"
+  "POLICY": "{\n  \"version\": 1,\n  \"operations\": {\n    \"allow\": [\n      \"read\",\n      \"add\",\n      \"append\"\n    ],\n    \"deny\": [\n      \"delete\",\n      \"folder-delete\"\n    ]\n  },\n  \"scopes\": {\n    \"read\": {\n      \"allow\": [\n        \"*\"\n      ],\n      \"deny\": [\n        \"iCloud/Private*\"\n      ]\n    },\n    \"write\": {\n      \"allow\": [\n        \"iCloud/Agent*\"\n      ],\n      \"deny\": []\n    }\n  },\n  \"limits\": {\n    \"max_write_batch\": 10\n  }\n}",
+  "ICON_COLOR": "#F08C00",
+  "ONELINER": "Read, search and write Apple Notes from the command line, built for AI coding agents.",
+  "PRIVATE_EXAMPLE": "iCloud/Private*",
+  "PERMISSION_HINT": "macOS has not allowed the app that runs the CLI to control Notes",
+  "DATA_NOUN": "your notes",
+  "INTEGRATION_NOTE": "The Notes tests create a folder named `agent-cli-test-<random>`, delete its notes (also from Recently Deleted) and remove the folder.",
+  "ARCHIVE_NOTE": ""
 }

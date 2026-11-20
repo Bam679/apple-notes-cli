@@ -45,7 +45,7 @@ printf '%s\n' '{"folder":"iCloud/Agent","title":"Idea","body":"…"}' | apple-no
 | 2 | usage | fix the flags (`--help`) |
 | 3 | not found | re-list folders or notes for valid ids/paths |
 | 4 | policy denied | **stop** and tell the user. Never edit `~/.config/agent-cli/*` and never work around it. |
-| 5 | confirm required | add `--confirm` only if the user wants the change |
+| 5 | confirm required | nothing changed; the plan is on stdout. Show it to the user and rerun with `--confirm` only if they want the change |
 | 6 | permission | the user must allow their terminal app to control Notes (Privacy & Security > Automation) |
 | 7 | unavailable | Notes didn't respond: retry once |
 | 8 | conflict | ambiguous folder name (use the full path or id), the note is locked, or the folder is not empty |
