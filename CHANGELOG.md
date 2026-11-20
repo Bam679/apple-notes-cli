@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/Bam679/apple-notes-cli/compare/v0.1.0...v0.2.0) (2026-11-20)
+
+
+### Features
+
+* **notes:** formatted notes from Markdown and file attachments ([58e93e3](https://github.com/Bam679/apple-notes-cli/commit/58e93e37cadac3d01c1bc4962bb03c8a746ce94d))
+
 ## 0.1.0 (2026-11-20)
 
 

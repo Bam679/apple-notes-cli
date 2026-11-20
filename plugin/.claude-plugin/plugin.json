@@ -1,6 +1,6 @@
 {
   "name": "apple-notes",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Apple Notes CLI for AI agents: list, search and read notes; policy-gated create/append/move via Notes.app.",
   "author": {
     "name": "Bam679",
